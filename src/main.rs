@@ -81,14 +81,20 @@ fn main() {
             });
 
             if template.file_type == "path" {
-                match fs::copy(template.path.clone(), new_path) {
+                match fs::copy(&template.path, &new_path) {
                     Ok(_) => {}
                     Err(e) => {
                         eprintln!("{}", e);
                         process::exit(1);
                     }
                 };
+                eprintln!("copied {} to {}", template.path, new_path.to_str().unwrap());
             } else if template.file_type == "url" {
+                eprintln!(
+                    "started to download {} to {}",
+                    &template.path,
+                    &new_path.to_str().unwrap()
+                );
                 let mut response = match reqwest::blocking::get(template.path.clone()) {
                     Ok(r) => r,
                     Err(e) => {
@@ -96,6 +102,11 @@ fn main() {
                         process::exit(1);
                     }
                 };
+                eprintln!(
+                    "finished to download {} to {}",
+                    &template.path,
+                    &new_path.to_str().unwrap()
+                );
 
                 response = match response.error_for_status() {
                     Ok(r) => r,
