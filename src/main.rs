@@ -1,17 +1,25 @@
 mod load_config;
 mod types;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::{collections::HashMap, fs, path::Path, path::PathBuf, process};
 use walkdir::WalkDir;
 use xdg;
 
 #[derive(Parser)]
 struct Cli {
-    #[arg(required = true)]
-    name: String,
-    #[arg(short = 'o', long = "output")]
-    output_path: Option<PathBuf>,
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Copy {
+        #[arg(required = true)]
+        name: String,
+        #[arg(short = 'o', long = "output")]
+        output_path: Option<PathBuf>,
+    },
 }
 
 fn main() {
@@ -58,60 +66,64 @@ fn main() {
         }
     }
 
-    if configs.get(&cli.name) == None {
-        eprintln!("couldn't find {} in the config", &cli.name);
-        process::exit(1);
-    }
-
-    let template = configs.get(&cli.name).unwrap();
-    let new_path = Path::new(".").join(match cli.output_path {
-        Some(p) => p.to_str().unwrap().to_string(),
-        None => template.file_name.clone(),
-    });
-
-    if template.file_type == "path" {
-        match fs::copy(template.path.clone(), new_path) {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("{}", e);
+    match cli.command {
+        Commands::Copy { name, output_path } => {
+            if configs.get(&name) == None {
+                eprintln!("couldn't find {} in the config", &name);
                 process::exit(1);
             }
-        };
-    } else if template.file_type == "url" {
-        let mut response = match reqwest::blocking::get(template.path.clone()) {
-            Ok(r) => r,
-            Err(e) => {
-                eprintln!("{}", e);
-                process::exit(1);
-            }
-        };
 
-        response = match response.error_for_status() {
-            Ok(r) => r,
-            Err(e) => {
-                eprintln!("{}", e);
-                process::exit(1);
-            }
-        };
+            let template = configs.get(&name).unwrap();
+            let new_path = Path::new(".").join(match output_path {
+                Some(p) => p.to_str().unwrap().to_string(),
+                None => template.file_name.clone(),
+            });
 
-        let mut out = match fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(new_path)
-        {
-            Ok(o) => o,
-            Err(e) => {
-                eprintln!("{}", e);
-                process::exit(1);
-            }
-        };
+            if template.file_type == "path" {
+                match fs::copy(template.path.clone(), new_path) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        process::exit(1);
+                    }
+                };
+            } else if template.file_type == "url" {
+                let mut response = match reqwest::blocking::get(template.path.clone()) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        process::exit(1);
+                    }
+                };
 
-        match std::io::copy(&mut response, &mut out) {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("{}", e);
-                process::exit(1);
+                response = match response.error_for_status() {
+                    Ok(r) => r,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        process::exit(1);
+                    }
+                };
+
+                let mut out = match fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(new_path)
+                {
+                    Ok(o) => o,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        process::exit(1);
+                    }
+                };
+
+                match std::io::copy(&mut response, &mut out) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        process::exit(1);
+                    }
+                };
             }
-        };
-    }
+        }
+    };
 }
