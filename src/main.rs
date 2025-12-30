@@ -64,7 +64,7 @@ fn main() {
     }
 
     let template = configs.get(&cli.name).unwrap();
-    let mut new_path = Path::new(".").join(match cli.output_path {
+    let new_path = Path::new(".").join(match cli.output_path {
         Some(p) => p.to_str().unwrap().to_string(),
         None => template.file_name.clone(),
     });
