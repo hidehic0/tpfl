@@ -14,7 +14,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Copy {
+    Cp {
         #[arg(required = true)]
         name: String,
         #[arg(short = 'o', long = "output")]
@@ -67,7 +67,7 @@ fn main() {
     }
 
     match cli.command {
-        Commands::Copy { name, output_path } => {
+        Commands::Cp { name, output_path } => {
             if configs.get(&name) == None {
                 eprintln!("couldn't find {} in the config", &name);
                 process::exit(1);
