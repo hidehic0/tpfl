@@ -20,6 +20,7 @@ enum Commands {
         #[arg(short = 'o', long = "output")]
         output_path: Option<PathBuf>,
     },
+    List {},
 }
 
 fn main() {
@@ -123,6 +124,14 @@ fn main() {
                         process::exit(1);
                     }
                 };
+            }
+        }
+        Commands::List {} => {
+            for (name, template) in configs {
+                println!(
+                    "{} {} {} {}",
+                    name, template.file_name, template.file_type, template.path
+                );
             }
         }
     };
