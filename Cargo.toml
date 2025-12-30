@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
+reqwest = { version = "0.12.28", features = ["blocking"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_yml = "0.0.12"
+walkdir = "2.5.0"
 xdg = "3.0.0"
