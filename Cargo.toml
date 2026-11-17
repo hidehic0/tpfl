@@ -10,6 +10,6 @@ reqwest = { version = "0.12.28", default-features = false, features = [
   "rustls-tls"
 ] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_yml = "0.0.12"
+serde_yml = "0.0.13"
 walkdir = "2.5.0"
 xdg = "3.0.0"
